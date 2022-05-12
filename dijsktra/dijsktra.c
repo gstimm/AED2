@@ -7,14 +7,17 @@
 #define FILL_RANDOM_GRAPH 3
 #define DIJSKTRA 4
 #define EXIT 5
+#define FILL_TEST_VALUES 6
 #define MAX_VERTICES 20
+#define INFINITY 99999
 
 void menu(int *option);
-void fillGraph(int graphSize);
+void fillInitialGraph(int graphSize);
 void addWeight(int graphSize);
 void listGraph(int graphSize);
 void dijsktra(int graphSize);
 void fillGraphWithRandomValues(int graphSize);
+void fillTestValues(int graphSize);
 
 int graph[MAX_VERTICES][MAX_VERTICES];
 
@@ -28,7 +31,7 @@ int main() {
     scanf("%d", &graphSize);
   }
 
-  fillGraph(graphSize);
+  fillInitialGraph(graphSize);
 
   do {
     menu(&option);
@@ -50,6 +53,9 @@ int main() {
       printf("Finalizando.\n");
       exit(1);
       break;
+    case FILL_TEST_VALUES:
+      fillTestValues(graphSize);
+      break;
     default:
       printf("Opção inválida.\n");
       break;
@@ -69,11 +75,13 @@ void menu(int *option) {
   printf("[%d] - BUSCAR MENOR CAMINHO ATRAVES DO ALGORITMO DE DIJSKTRA\n",
          DIJSKTRA);
   printf("[%d] - FINALIZAR PROGRAMA\n", EXIT);
+  printf("[%d] - PREENCHER TESTE ESTÁTICO PARA DESENVOLVIMENTO\n",
+         FILL_TEST_VALUES);
   printf("\nDigite a opção desejada: ");
   scanf("%d", option);
 }
 
-void fillGraph(int graphSize) {
+void fillInitialGraph(int graphSize) {
   for (int i = 0; i < graphSize; i++) {
     for (int j = 0; j < graphSize; j++) {
       graph[i][j] = 0;
@@ -153,57 +161,76 @@ void fillGraphWithRandomValues(int graphSize) {
   }
 }
 
+void fillTestValues(int graphSize) {
+  graph[0][1] = 3;
+  graph[1][0] = 3;
+  graph[0][2] = 1;
+  graph[2][0] = 1;
+  graph[0][3] = 2;
+  graph[3][0] = 2;
+  graph[1][2] = 1;
+  graph[2][1] = 1;
+  graph[1][3] = 5;
+  graph[3][1] = 5;
+  graph[2][3] = 4;
+  graph[3][2] = 4;
+}
+
 void dijsktra(int graphSize) {
-  int i, j, k, min, min_index, aux, aux_index, origin, destiny, distanceValue;
   int distance[graphSize], visited[graphSize];
+  int counter = 0, origin, destiny, shortDistance, shortDistanceIndex;
 
   do {
-    printf("Digite o valor de origem: ");
+    printf("Digite o vertice de origem: ");
     scanf("%d", &origin);
-  } while (origin < 0 || origin >= graphSize);
+  } while (origin <= 0 || origin > graphSize);
 
   do {
-    printf("Digite o valor de destino: ");
+    printf("Digite o vertice de destino: ");
     scanf("%d", &destiny);
-  } while (origin < 0 || origin >= graphSize);
+  } while (destiny <= 0 || destiny > graphSize);
 
-  for (i = 0; i < graphSize; i++) {
-    distance[i] = graph[origin][i];
+  origin--;
+  destiny--;
+  shortDistanceIndex = origin;
+
+  for (int i = 0; i < graphSize; i++) {
+    distance[i] = INFINITY;
     visited[i] = 0;
   }
 
   distance[origin] = 0;
-  visited[origin] = 1;
+  counter++;
 
-  for (i = 0; i < graphSize; i++) {
-    min = 99999;
-    min_index = 0;
+  while (counter < graphSize) {
+    shortDistance = INFINITY;
 
-    for (j = 0; j < graphSize; j++) {
-      if (visited[j] == 0 && distance[j] < min) {
-        min = distance[j];
-        min_index = j;
+    for (int i = 0; i < graphSize; i++) {
+      if (distance[i] < shortDistance && visited[i] == 0) {
+        shortDistance = distance[i];
+        shortDistanceIndex = i;
       }
     }
 
-    visited[min_index] = 1;
+    visited[shortDistanceIndex] = 1;
 
-    for (j = 0; j < graphSize; j++) {
-      if (visited[j] == 0 &&
-          (distance[min_index] + graph[min_index][j]) < distance[j]) {
-        distance[j] = distance[min_index] + graph[min_index][j];
-        distanceValue = distance[j];
+    for (int i = 0; i < graphSize; i++) {
+      if (graph[shortDistanceIndex][i] != 0) {
+        if (visited[i] == 0) {
+          if (shortDistance + graph[shortDistanceIndex][i] < distance[i]) {
+            distance[i] = shortDistance + graph[shortDistanceIndex][i];
+          }
+        }
       }
     }
+    counter++;
   }
 
-  printf("\nDistancia Minima: %d\n\n", distanceValue);
-
-  printf("\nCaminho a ser percorrido\n\n");
-
-  for (i = 0; i < graphSize; i++) {
-    printf("%d ", distance[i]);
+  if (distance[destiny] == INFINITY) {
+    printf("\nNão foi possível encontrar um caminho válido.\n");
+    return;
   }
 
-  printf("\n");
+  printf("\nA menor distancia entre os vertices %d e %d é: %d\n", ++origin,
+         ++destiny, distance[destiny]);
 }
